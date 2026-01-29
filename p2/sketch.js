@@ -22,6 +22,8 @@ let notes = {
   1: 0.3
 }
 
+let noteClasses = []
+
 function setup() {
   createCanvas(400, 400);
   
@@ -31,6 +33,10 @@ function setup() {
   circleRadius = height / 6 - 10;
   
   speed = 100;
+  
+  noteClasses = [
+    new Note(1, true)
+  ]
 }
 
 function draw() {
@@ -43,6 +49,10 @@ function draw() {
   text("X: " + mouseX + ", Y:" + mouseY, mouseX, mouseY);
   
   time += deltaTime;
+  
+  for (i=0;i<Object.keys(noteClasses).length;i++) {
+    noteClasses[i].drawSelf();
+  }
 }
 
 function drawBar() {
@@ -51,7 +61,7 @@ function drawBar() {
 }
 
 function drawTarget() {
-  fill(0);
+  fill(keyIsDown(65) ? 0 : 255);
   circle(circleRadius - 20, barY, circleRadius);
   fill(255)
 }
@@ -85,4 +95,18 @@ function drawNotes() {
 
 function noteX(timeTillApproach, i) {
   return width - (timeTillApproach / notes[i] * width);
+}
+
+class Note {
+  constructor(spawnTime, type) {
+    this.spawnTime = spawnTime;
+    this.type = type;
+    this.x = width/2;
+  }
+  
+  drawSelf() {
+    fill(this.type ? 0 : 255);
+    circle(this.x, barY, circleRadius);
+    fill(255);
+  }
 }
