@@ -18,13 +18,16 @@ let speed;
 
 let score;
 let lastScore;
+let splash;
 
 let targetOffset;
 
 let notes = [];
 
+const debug = true;
+
 function setup() {
-  createCanvas(400, 400);
+  createCanvas(600, 400);
   
   barY = height / 2;
   barHeight = height / 6;
@@ -42,7 +45,6 @@ function setup() {
   notes = [
     new Note(1, true),
     new Note(2, true),
-    new Note(3, true),
     new Note(4, true)
   ]
 }
@@ -63,33 +65,39 @@ function draw() {
   
   fill(0)
   text("Last Score: " + newScore + "\nTotal Score: " + score, 200, 300)
+  text(splash, width/2, height/3);
   fill(255)
   
-  if (Number.isInteger(round(time, 3))) {
+  if (debug && Number.isInteger(round(time, 3))) {
     notes.push(new Note(time + 1, true));
   }
 }
 
 function drawBar() {
+  switch (newScore) {
+    case 50:
+      fill(255);
+      splash = "Good";
+      break;
+    case 100:
+      fill(100, 200, 100);
+      splash = "Great!";
+      break;
+    case 10:
+      fill(50, 100, 50);
+      splash = "Ehh...";
+      break;
+    default:
+      fill(0)
+      splash = "";
+      break;
+  }
   rectMode(CENTER);
   rect(width / 2, barY, width + 2, barHeight);
 }
 
 function drawTarget() {
-  switch (newScore) {
-    case 50:
-      fill(255);
-      break;
-    case 100:
-      fill(100, 200, 100);
-      break;
-    case 10:
-      fill(50, 100, 50)
-      break;
-    default:
-      fill(0)
-      break;
-  }
+  fill(keyIsDown(65) ? 0 : 255);
   circle(targetOffset, barY, circleRadius);
   fill(255)
 }
@@ -98,7 +106,7 @@ function keyReleased() {
   if (keyCode === 65) {
     let note = notes[0];
     
-    if (note.pressed) return;
+    if (!note || note.pressed) return;
     note.pressed = true;
     
     newScore = 0;
@@ -106,13 +114,13 @@ function keyReleased() {
     let difference = abs(targetOffset - note.x);
     console.log(difference);
     
-    if (difference < 70) {
+    if (difference < 100) {
       newScore += 10;
       
-      if (difference < 40) {
+      if (difference < 70) {
         newScore += 40;
         
-        if (difference < 10) {
+        if (difference < 30) {
           newScore += 50;
         }
       }
@@ -152,14 +160,14 @@ class Note {
   constructor(spawnTime, type) {
     this.spawnTime = spawnTime;
     this.type = type;
-    this.x = width/2;
+    this.x = width + circleRadius;
     
     this.pressed = false;
   }
   
   update() {
     let deltaT = this.spawnTime - (time);
-    this.x = (circleRadius - 20) + deltaT * 400 * speed;
+    this.x = (circleRadius - 20) + deltaT * 600;
     if (this.x < -30) {
       removeNote(this);
     }
