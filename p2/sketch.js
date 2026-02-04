@@ -8,21 +8,20 @@
     Track when the target and a note are in the same space, either with timing or by checking what %          intersection there are between the note and     the target. 
 */
 
-let barY, barHeight;
+//TODO: keyPress and keyRelease for rhythm component.
 
+let barY, barHeight;
 let circleRadius;
 
-let time = 0;
+let time;
 let speed;
 
-let spawnDelay = 0.1;
+let score;
+let lastScore;
 
-let notes = {
-  0: 1,
-  1: 0.3
-}
+let targetOffset;
 
-let noteClasses = []
+let notes = [];
 
 function setup() {
   createCanvas(400, 400);
@@ -32,10 +31,19 @@ function setup() {
   
   circleRadius = height / 6 - 10;
   
-  speed = 100;
+  targetOffset = circleRadius + 20;
   
-  noteClasses = [
-    new Note(1, true)
+  speed = 1; // px/sec.
+  time = 0;
+  
+  score = 0;
+  newScore = 0;
+  
+  notes = [
+    new Note(1, true),
+    new Note(2, true),
+    new Note(3, true),
+    new Note(4, true)
   ]
 }
 
@@ -43,15 +51,22 @@ function draw() {
   background(220);
   
   drawBar();
-  drawNotes();
   drawTarget();
   
-  text("X: " + mouseX + ", Y:" + mouseY, mouseX, mouseY);
+  time += 1/60;
   
-  time += deltaTime;
+  for (let i=notes.length - 1;i>= 0;i--) {
+    let note = notes[i];
+    note.update();
+    note.drawSelf();
+  }
   
-  for (i=0;i<Object.keys(noteClasses).length;i++) {
-    noteClasses[i].drawSelf();
+  fill(0)
+  text("Last Score: " + newScore + "\nTotal Score: " + score, 200, 300)
+  fill(255)
+  
+  if (Number.isInteger(round(time, 3))) {
+    notes.push(new Note(time + 1, true));
   }
 }
 
@@ -61,9 +76,50 @@ function drawBar() {
 }
 
 function drawTarget() {
-  fill(keyIsDown(65) ? 0 : 255);
-  circle(circleRadius - 20, barY, circleRadius);
+  switch (newScore) {
+    case 50:
+      fill(255);
+      break;
+    case 100:
+      fill(100, 200, 100);
+      break;
+    case 10:
+      fill(50, 100, 50)
+      break;
+    default:
+      fill(0)
+      break;
+  }
+  circle(targetOffset, barY, circleRadius);
   fill(255)
+}
+
+function keyReleased() {
+  if (keyCode === 65) {
+    let note = notes[0];
+    
+    if (note.pressed) return;
+    note.pressed = true;
+    
+    newScore = 0;
+      
+    let difference = abs(targetOffset - note.x);
+    console.log(difference);
+    
+    if (difference < 70) {
+      newScore += 10;
+      
+      if (difference < 40) {
+        newScore += 40;
+        
+        if (difference < 10) {
+          newScore += 50;
+        }
+      }
+    }
+    
+    score += newScore;
+  }
 }
 
 /*
@@ -71,9 +127,8 @@ function drawTarget() {
   Finish at (circleRadius - 20) at time = notes[i]
   Going in between should involve some speed.
 */
-
 //... after around 30 mins of working on this I realized there's a Prototype (sorta like OOP) but i don't know how to use it. Will figure out another time.
-function drawNotes() {
+/*function drawNotes() {
   for (i=0; i<(Object.keys(notes).length); i++) {
     let timeTillApproach = max(notes[i] - time/1000, 0);
     
@@ -91,22 +146,42 @@ function drawNotes() {
     
     circle(noteX(timeTillApproach, i), barY, circleRadius);
   }
-}
-
-function noteX(timeTillApproach, i) {
-  return width - (timeTillApproach / notes[i] * width);
-}
+}*/
 
 class Note {
   constructor(spawnTime, type) {
     this.spawnTime = spawnTime;
     this.type = type;
     this.x = width/2;
+    
+    this.pressed = false;
+  }
+  
+  update() {
+    let deltaT = this.spawnTime - (time);
+    this.x = (circleRadius - 20) + deltaT * 400 * speed;
+    if (this.x < -30) {
+      removeNote(this);
+    }
   }
   
   drawSelf() {
-    fill(this.type ? 0 : 255);
-    circle(this.x, barY, circleRadius);
+    fill(this.type ? (this.pressed ? (200) : this.x) : 255);
+    
+    if (this.x < width + 25) {
+      circle(this.x, barY, circleRadius);
+    }
     fill(255);
   }
+}
+
+function removeNote(itemToRemove) {
+    const index = notes.indexOf(itemToRemove);
+
+    if (index !== -1) {
+        notes = notes.slice(0, index)
+        .concat(notes.slice(index + 1));
+    }
+
+	return notes;
 }
