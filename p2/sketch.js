@@ -8,7 +8,8 @@
     Track when the target and a note are in the same space, either with timing or by checking what %          intersection there are between the note and     the target. 
 */
 
-//TODO: keyPress and keyRelease for rhythm component.
+//TODO: keyPress and keyRelease for rhythm logic
+//should make scoring more accurate
 
 let barY, barHeight;
 let circleRadius;
@@ -21,6 +22,9 @@ let lastScore;
 let splash;
 
 let targetOffset;
+
+// TODO: smoothstep bar colours?
+let lastBarColour;
 
 let notes = [];
 
@@ -69,7 +73,7 @@ function draw() {
   fill(255)
   
   if (debug && Number.isInteger(round(time, 3))) {
-    notes.push(new Note(time + 1, true));
+    notes.push(new Note(random(time + 1, time + 2), true));
   }
 }
 
@@ -88,7 +92,7 @@ function drawBar() {
       splash = "Ehh...";
       break;
     default:
-      fill(0)
+      fill(255)
       splash = "";
       break;
   }
@@ -98,8 +102,13 @@ function drawBar() {
 
 function drawTarget() {
   fill(keyIsDown(65) ? 0 : 255);
-  circle(targetOffset, barY, circleRadius);
+  // How should I make the target expand/shrink constantly? 
+  circle(targetOffset, barY, circleRadius + easeInOutQuad(time));
   fill(255)
+}
+
+function easeInOutQuad(x) {
+  return x < 0.5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2;
 }
 
 function keyReleased() {
@@ -177,7 +186,7 @@ class Note {
     fill(this.type ? (this.pressed ? (200) : this.x) : 255);
     
     if (this.x < width + 25) {
-      circle(this.x, barY, circleRadius);
+      circle(this.x, barY, circleRadius + abs(this.x - targetOffset)/30 );
     }
     fill(255);
   }
