@@ -56,10 +56,24 @@ function setup() {
 function draw() {
   background(220);
   
+  time += 1/60;
+  
+  if (time >= 20) {
+    drawEnd();
+    return;
+  }
+  
+  drawGame();
+}
+
+function drawEnd() {
+  fill(0);
+  text("Game Over! Final Score: " + score, width/2, height/2);
+}
+
+function drawGame() {
   drawBar();
   drawTarget();
-  
-  time += 1/60;
   
   for (let i=notes.length - 1;i>= 0;i--) {
     let note = notes[i];
@@ -67,10 +81,10 @@ function draw() {
     note.drawSelf();
   }
   
-  fill(0)
-  text("Last Score: " + newScore + "\nTotal Score: " + score, 200, 300)
+  fill(0);
+  text("Last Score: " + newScore + "\nTotal Score: " + score, 200, 300);
   text(splash, width/2, height/3);
-  fill(255)
+  fill(255);
   
   if (debug && Number.isInteger(round(time, 3))) {
     notes.push(new Note(random(time + 1, time + 2), true));
@@ -97,13 +111,13 @@ function drawBar() {
       break;
   }
   rectMode(CENTER);
-  rect(width / 2, barY, width + 2, barHeight);
+  rect(width / 2, barY, width + 2, barHeight + (cos(time)) * 3);
 }
 
 function drawTarget() {
-  fill(keyIsDown(65) ? 0 : 255);
+  fill(keyIsDown(65) ? 0 : (100 + abs(cos(time)*50)));
   // How should I make the target expand/shrink constantly? 
-  circle(targetOffset, barY, circleRadius + easeInOutQuad(time));
+  circle(targetOffset, barY, circleRadius + (cos(time)*3));
   fill(255)
 }
 
@@ -186,7 +200,7 @@ class Note {
     fill(this.type ? (this.pressed ? (200) : this.x) : 255);
     
     if (this.x < width + 25) {
-      circle(this.x, barY, circleRadius + abs(this.x - targetOffset)/30 );
+      circle(this.x, barY, circleRadius + abs(cos(time)*3));
     }
     fill(255);
   }
