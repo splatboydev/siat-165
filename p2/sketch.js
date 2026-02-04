@@ -82,13 +82,17 @@ function drawGame() {
   }
   
   fill(0);
-  text("Last Score: " + newScore + "\nTotal Score: " + score, 200, 300);
+  drawTextProperly("Last Score: " + newScore, width / 2, 300);
   text(splash, width/2, height/3);
   fill(255);
   
   if (debug && Number.isInteger(round(time, 3))) {
     notes.push(new Note(random(time + 1, time + 2), true));
   }
+}
+
+function drawTextProperly(string, x, y) {
+  text(string, x - textWidth(string), y); // apparently even this doesn't "center it" right...
 }
 
 function drawBar() {
