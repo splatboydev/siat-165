@@ -17,6 +17,8 @@ let circleRadius;
 let time;
 let speed;
 
+let screen;
+
 let score;
 let lastScore;
 let splash;
@@ -31,7 +33,7 @@ let notes = [];
 const debug = true;
 
 function setup() {
-  createCanvas(600, 400);
+  createCanvas(800, 400);
   
   barY = height / 2;
   barHeight = height / 6;
@@ -40,11 +42,13 @@ function setup() {
   
   targetOffset = circleRadius + 20;
   
-  speed = 1; // px/sec.
+  speed = 0.8; // px/sec.
   time = 0;
   
   score = 0;
   newScore = 0;
+  
+  screen = "start";
   
   notes = [
     new Note(1, true),
@@ -58,17 +62,35 @@ function draw() {
   
   time += 1/60;
   
-  if (time >= 20) {
-    drawEnd();
-    return;
+  switch (screen) {
+    case "end":
+      drawEnd();
+      break;
+    case "start":
+      drawStart();
+      break;
+    case "game":
+      drawGame();
+      break;
+    default:
+      break;
   }
+}
+
+function drawStart() {
+  textSize(32*abs(cos(time)));
+  text("Taiko", width/2 - textWidth("Taiko")/2, height/2);
+  text("Press A to start", width/2 - textWidth("Taiko")/2, height/2 + 50);
   
-  drawGame();
+  if (keyIsDown(65)) {
+    screen = "game";
+    time = 0;
+  }
 }
 
 function drawEnd() {
   fill(0);
-  text("Game Over! Final Score: " + score, width/2, height/2);
+  drawTextProperly("Game Over! Final Score: " + score, width/2, height/2);
 }
 
 function drawGame() {
@@ -88,6 +110,11 @@ function drawGame() {
   
   if (debug && Number.isInteger(round(time, 3))) {
     notes.push(new Note(random(time + 1, time + 2), true));
+  }
+  
+  if (time >= 20) {
+    screen = "end";
+    return;
   }
 }
 
@@ -115,7 +142,7 @@ function drawBar() {
       break;
   }
   rectMode(CENTER);
-  rect(width / 2, barY, width + 2, barHeight + (cos(time)) * 3);
+  rect(width / 2, barY, width + 2, barHeight + (cos(time)) * 8);
 }
 
 function drawTarget() {
@@ -123,10 +150,6 @@ function drawTarget() {
   // How should I make the target expand/shrink constantly? 
   circle(targetOffset, barY, circleRadius + (cos(time)*3));
   fill(255)
-}
-
-function easeInOutQuad(x) {
-  return x < 0.5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2;
 }
 
 function keyReleased() {
@@ -196,7 +219,7 @@ class Note {
     let deltaT = this.spawnTime - (time);
     this.x = (circleRadius - 20) + deltaT * 600;
     if (this.x < -30) {
-      removeNote(this);
+      removeSelf();
     }
   }
   
@@ -208,10 +231,10 @@ class Note {
     }
     fill(255);
   }
-}
-
-function removeNote(itemToRemove) {
-    const index = notes.indexOf(itemToRemove);
+  
+  // Taken from https://www.geeksforgeeks.org/javascript/how-to-remove-a-specific-item-from-an-array-in-javascript/
+  removeSelf() {
+    const index = notes.indexOf(this);
 
     if (index !== -1) {
         notes = notes.slice(0, index)
@@ -219,4 +242,5 @@ function removeNote(itemToRemove) {
     }
 
 	return notes;
+  }
 }
