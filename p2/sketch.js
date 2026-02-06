@@ -94,6 +94,9 @@ function drawEnd() {
 }
 
 function drawGame() {
+  textSize(20);
+  textAlign(CENTER)
+  
   drawBar();
   drawTarget();
   
@@ -104,7 +107,7 @@ function drawGame() {
   }
   
   fill(0);
-  drawTextProperly("Last Score: " + newScore, width / 2, 300);
+  text("Last Score: " + newScore, width / 2, 300);
   text(splash, width/2, height/3);
   fill(255);
   
@@ -162,7 +165,6 @@ function keyReleased() {
     newScore = 0;
       
     let difference = abs(targetOffset - note.x);
-    console.log(difference);
     
     if (difference < 100) {
       newScore += 10;
@@ -172,6 +174,10 @@ function keyReleased() {
         
         if (difference < 30) {
           newScore += 50;
+          
+          if (difference < 15) {
+            newScore += 100;
+          }
         }
       }
     }
@@ -219,7 +225,7 @@ class Note {
     let deltaT = this.spawnTime - (time);
     this.x = (circleRadius - 20) + deltaT * 600;
     if (this.x < -30) {
-      removeSelf();
+      this.removeSelf();
     }
   }
   
