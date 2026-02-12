@@ -49,7 +49,7 @@ function setup() {
   
   targetOffset = circleRadius + 20;
   
-  speed = 0.8; // px/sec.
+  speed = 0.6; // px/sec.
   time = 0;
   
   score = 0;
@@ -92,7 +92,7 @@ function drawStart() {
   // Waits for a "a" keypress and switches screen upon receiving it.
   // Text scales from an arbitrary value 15 to 25 + 15 (cos maximum is 1)
   fill(155, 237, 155)
-  textSize(max(25*abs(cos(time)) + 15, 15));
+  textSize(max(25*abcos() + 15, 15));
   text("", width/2 - textWidth("Taiko")/2, height/2);
   text("Press A to start", width/2 - textWidth("----- - -- -----") / 1.5, height/2);
   
@@ -103,19 +103,24 @@ function drawStart() {
 }
 
 function drawEnd() {
+  // GAME LOOP - 3? - Game Over screen
+  // Render final score.
   fill(0);
   text("Game Over! Final Score: " + score, width/2, height/2);
 }
 
 function drawGame() {
+  // GAME LOOP - 3? - Game screen
+  // Where the majority of game logic is handled and rendered.
+  
   textSize(20);
   textAlign(CENTER)
   
-  // Draw the button and target. These are drawn before notes so notes are placed on top.
+  // (4) Draw the button and target. These are drawn before notes so notes are placed on top.
   drawBar();
   drawTarget();
   
-  // Iterate (in reverse) over notes in order to update and render them.
+  // (5) Iterate (in reverse) over notes in order to update and render them.
   // Reverse order made removing outdated notes easier.
   for (let i=notes.length - 1;i>= 0;i--) {
     let note = notes[i];
@@ -123,6 +128,7 @@ function drawGame() {
     note.drawSelf();
   }
   
+  // (6) Draw the last score and splash text.
   noStroke();
   fill(143, 222, 143);
   text("Last Score: " + newScore, width / 2, 300);
@@ -141,23 +147,19 @@ function drawGame() {
   }
 }
 
-function drawTextProperly(string, x, y) {
-  text(string, x - textWidth(string), y); // apparently even this doesn't "center it" right...
-}
-
 function drawBar() {
   // Change the bar's colour based on the previous score. I initially wanted to make the transition smoother, but decided this wasn't a big priority.
   switch (newScore) {
     case 50:
-      fill(111, 214, 134);
+      fill(195, 235, 204);
       splash = "Good";
       break;
     case 100:
-      fill(82, 191, 82);
+      fill(213, 255, 223);
       splash = "Great!";
       break;
     case 10:
-      fill(213, 255, 223);
+      fill(204, 242, 213);
       splash = "Ehh...";
       break;
     case 200:
@@ -170,18 +172,18 @@ function drawBar() {
   }
   stroke(155, 237, 155)
   rectMode(CENTER);
-  // Animation - resize subtly on time;
-  rect(width / 2, barY, width + 2, barHeight + (cos(time)) * 5);
+  
+  rect(width / 2, barY, width + 2, barHeight + abcos() * 5);
 }
 
 function drawTarget() {
+  // Apply different colour to the target if a is pressed.
   if (keyIsDown(65)) {
     fill(187, 232, 187);
   } else {
     fill (211, 255, 211);
   }
-  // How should I make the target expand/shrink constantly? 
-  // Present me: animation over time with... time. But this is not useful here.
+  
   circle(targetOffset, barY, circleRadius);
   fill(255)
 }
@@ -190,11 +192,13 @@ function keyReleased() {
   if (keyCode === 65) {
     let note = notes[0];
     
-    if (!note || note.pressed) return;
+    if (!note || note.pressed) return; // Edge case handling & prevent old notes from updating score.
     note.pressed = true;
     
     newScore = 0;
-      
+    
+    // Calculate score based off absolute distance between note and target.
+    // However since this is calculated on keyRelease there can often be latency between press and note.
     let difference = abs(targetOffset - note.x);
     
     if (difference < 100) {
@@ -253,6 +257,8 @@ class Note {
     this.pressed = false;
   }
   
+  // Both update() and drawSelf() are called at (5).
+  
   // Update note (calculate position and check if outside of window)
   update() {
     let deltaT = this.spawnTime - (time);
@@ -276,7 +282,11 @@ class Note {
       }
     }
     
-    circle(this.x, barY, circleRadius + abs(cos(time)*3));
+    circle(this.x, barY, circleRadius + abcos()*3);
     fill(255);
   }
+}
+
+function abcos() {
+  return abs(cos(time));
 }
