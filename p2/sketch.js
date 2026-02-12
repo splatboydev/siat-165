@@ -11,6 +11,8 @@
 //TODO: keyPress and keyRelease for rhythm logic
 //should make scoring more accurate
 
+// TODO to be done either Wednesday or never.
+
 let barY, barHeight;
 let circleRadius;
 
@@ -25,7 +27,7 @@ let splash;
 
 let targetOffset;
 
-// TODO: smoothstep bar colours?
+// TODO: smoothstep bar colours? // TODO rejected
 let lastBarColour;
 
 let notes = [];
@@ -33,6 +35,11 @@ let notes = [];
 const debug = true;
 
 function setup() {
+  
+  // GAME LOOP - 1 - Initialization
+  // Create p5 canvas, assign default values.
+  // RUN ONCE - notexactly in the "loop"
+  
   createCanvas(800, 400);
   
   barY = height / 2;
@@ -58,16 +65,19 @@ function setup() {
 }
 
 function draw() {
-  background(220);
+  // GAME LOOP - 2 - Draw loop
+  // Run every frame, handles all logic and rendering.
   
-  time += 1/60;
+  background(224, 255, 224);
   
-  switch (screen) {
-    case "end":
-      drawEnd();
-      break;
+  time += 1/60; // increment game time
+  
+  switch (screen) { // display and update game based on the screen variable
     case "start":
       drawStart();
+      break;
+    case "end":
+      drawEnd();
       break;
     case "game":
       drawGame();
@@ -78,9 +88,13 @@ function draw() {
 }
 
 function drawStart() {
-  textSize(32*abs(cos(time)));
-  text("Taiko", width/2 - textWidth("Taiko")/2, height/2);
-  text("Press A to start", width/2 - textWidth("Taiko")/2, height/2 + 50);
+  // GAME LOOP - 3? - Menu/Start screen
+  // Waits for a "a" keypress and switches screen upon receiving it.
+  // Text scales from an arbitrary value 15 to 25 + 15 (cos maximum is 1)
+  fill(155, 237, 155)
+  textSize(max(25*abs(cos(time)) + 15, 15));
+  text("", width/2 - textWidth("Taiko")/2, height/2);
+  text("Press A to start", width/2 - textWidth("----- - -- -----") / 1.5, height/2);
   
   if (keyIsDown(65)) {
     screen = "game";
@@ -90,31 +104,37 @@ function drawStart() {
 
 function drawEnd() {
   fill(0);
-  drawTextProperly("Game Over! Final Score: " + score, width/2, height/2);
+  text("Game Over! Final Score: " + score, width/2, height/2);
 }
 
 function drawGame() {
   textSize(20);
   textAlign(CENTER)
   
+  // Draw the button and target. These are drawn before notes so notes are placed on top.
   drawBar();
   drawTarget();
   
+  // Iterate (in reverse) over notes in order to update and render them.
+  // Reverse order made removing outdated notes easier.
   for (let i=notes.length - 1;i>= 0;i--) {
     let note = notes[i];
     note.update();
     note.drawSelf();
   }
   
-  fill(0);
+  noStroke();
+  fill(143, 222, 143);
   text("Last Score: " + newScore, width / 2, 300);
   text(splash, width/2, height/3);
   fill(255);
   
+  // Debug mode to test note creation and randomisation.
   if (debug && Number.isInteger(round(time, 3))) {
     notes.push(new Note(random(time + 1, time + 2), true));
   }
   
+  // Game ends at 20 seconds.
   if (time >= 20) {
     screen = "end";
     return;
@@ -126,32 +146,43 @@ function drawTextProperly(string, x, y) {
 }
 
 function drawBar() {
+  // Change the bar's colour based on the previous score. I initially wanted to make the transition smoother, but decided this wasn't a big priority.
   switch (newScore) {
     case 50:
-      fill(255);
+      fill(111, 214, 134);
       splash = "Good";
       break;
     case 100:
-      fill(100, 200, 100);
+      fill(82, 191, 82);
       splash = "Great!";
       break;
     case 10:
-      fill(50, 100, 50);
+      fill(213, 255, 223);
       splash = "Ehh...";
       break;
+    case 200:
+      fill(230, 100, 0);
+      splash = "Marvelous!"
     default:
-      fill(255)
+      fill(243, 255, 243)
       splash = "";
       break;
   }
+  stroke(155, 237, 155)
   rectMode(CENTER);
-  rect(width / 2, barY, width + 2, barHeight + (cos(time)) * 8);
+  // Animation - resize subtly on time;
+  rect(width / 2, barY, width + 2, barHeight + (cos(time)) * 5);
 }
 
 function drawTarget() {
-  fill(keyIsDown(65) ? 0 : (100 + abs(cos(time)*50)));
+  if (keyIsDown(65)) {
+    fill(187, 232, 187);
+  } else {
+    fill (211, 255, 211);
+  }
   // How should I make the target expand/shrink constantly? 
-  circle(targetOffset, barY, circleRadius + (cos(time)*3));
+  // Present me: animation over time with... time. But this is not useful here.
+  circle(targetOffset, barY, circleRadius);
   fill(255)
 }
 
@@ -213,6 +244,7 @@ function keyReleased() {
 }*/
 
 class Note {
+  // Setup individual note based off params.
   constructor(spawnTime, type) {
     this.spawnTime = spawnTime;
     this.type = type;
@@ -221,32 +253,30 @@ class Note {
     this.pressed = false;
   }
   
+  // Update note (calculate position and check if outside of window)
   update() {
     let deltaT = this.spawnTime - (time);
     this.x = (circleRadius - 20) + deltaT * 600;
     if (this.x < -30) {
-      this.removeSelf();
+      // https://stackoverflow.com/questions/2003815/how-to-remove-element-from-an-array-in-javascript
+      notes.shift();
     }
   }
   
+  // Draw note. Does not run if
   drawSelf() {
-    fill(this.type ? (this.pressed ? (200) : this.x) : 255);
+    if (!(this.x < width + 25)) return;
+    if (this.type) {
+      if (this.pressed) {
+        stroke(0);
+        fill(200);
+      } else {
+        stroke(204, 236, 252);
+        fill(178, 211, 227);
+      }
+    }
     
-    if (this.x < width + 25) {
-      circle(this.x, barY, circleRadius + abs(cos(time)*3));
-    }
+    circle(this.x, barY, circleRadius + abs(cos(time)*3));
     fill(255);
-  }
-  
-  // Taken from https://www.geeksforgeeks.org/javascript/how-to-remove-a-specific-item-from-an-array-in-javascript/
-  removeSelf() {
-    const index = notes.indexOf(this);
-
-    if (index !== -1) {
-        notes = notes.slice(0, index)
-        .concat(notes.slice(index + 1));
-    }
-
-	return notes;
   }
 }
