@@ -13,6 +13,7 @@ let screen;
 
 let score;
 let lastScore;
+
 let splash;
 let splashColour;
 
@@ -41,7 +42,7 @@ function setup() {
   
   targetOffset = circleRadius + 60;
   
-  speed = 0.6; // px/sec.
+  speed = 1; // px/sec.
   time = 0;
   
   score = 0;
@@ -50,14 +51,14 @@ function setup() {
   screen = "start";
   
   notes = [
-    new Note(1, true),
     new Note(2, true),
-    new Note(4, true)
+    new Note(3, true),
+    new Note(5, true)
   ]
   
   objects = [];
   
-  targetColour = (211, 255, 211);
+  targetColour = [211, 255, 211];
   splashColour = (243, 255, 243);
 }
 
@@ -66,8 +67,6 @@ function draw() {
   // Run every frame, handles all logic and rendering.
   
   background(224, 255, 224);
-  
-  time += 1/60; // increment game time
   
   switch (screen) { // display and update game based on the screen variable
     case "start":
@@ -82,6 +81,8 @@ function draw() {
     default:
       break;
   }
+  
+  time += 1/60; // increment game time
 }
 
 function drawStart() {
@@ -103,6 +104,7 @@ function drawEnd() {
   // GAME LOOP - 3? - Game Over screen
   // Render final score.
   fill(0);
+  
   text("Game Over! Final Score: " + score, width/2, height/2);
 }
 
@@ -186,9 +188,9 @@ function drawBar() {
 function drawTarget() {
   // Apply different colour to the target if a is pressed.
   if (keyIsDown(65)) {
-    targetColour = (187, 232, 187);
+    targetColour = [187, 232, 187];
   } else {
-    targetColour = (211, 255, 211);
+    targetColour = [211, 255, 211];
   }
   
   fill(targetColour);
@@ -219,7 +221,7 @@ function keyPressed() {
         if (difference < 30) {
           newScore += 50;
           
-          if (difference < 15) {
+          if (difference < 10) {
             newScore += 50;
           }
         }
@@ -257,18 +259,19 @@ function keyPressed() {
 }*/
 
 class Note {
-  // Setup individual note based off params.
+  // Setup individual note.
   constructor(spawnTime, type) {
     this.spawnTime = spawnTime;
     this.type = type;
     this.x = width + circleRadius;
     
     this.pressed = false;
+    this.a = 255; // Alpha 
   }
   
   // Both update() and drawSelf() are called at (5).
   
-  // Update note (calculate position and check if outside of window)
+  // Update this note (calculate position and check if outside of window)
   update() {
     let deltaT = this.spawnTime - (time);
     this.x = (circleRadius - 20) + deltaT * 600;
@@ -276,18 +279,25 @@ class Note {
       // https://stackoverflow.com/questions/2003815/how-to-remove-element-from-an-array-in-javascript
       notes.shift();
     }
+    
+    if (this.pressed) {
+      this.a *= 0.8;
+    }
   }
   
-  // Draw note. Does not run if
+  // Draw this note. Does not run if outside screen.
   drawSelf() {
-    if (!(this.x < width + 25)) return;
+    if ((this.x > width + 25) || this.x < - 25) {
+      return;
+    }
+    
     if (this.type) {
       if (this.pressed) {
-        stroke(0);
-        fill(200);
+        stroke(0, 0, 0, this.a);
+        fill(200, 200, 200, this.a);
       } else {
-        stroke(204, 236, 252);
-        fill(178, 211, 227);
+        stroke(204, 236, 252, this.a);
+        fill(178, 211, 227, this.a);
       }
     }
     
@@ -298,4 +308,15 @@ class Note {
 
 function abcos() {
   return abs(cos(time));
+}
+
+// Taken from Inigo Quilez' article on smoothstep.
+// https://iquilezles.org/articles/smoothsteps/
+// to be done later
+function smoothsteps(x) {
+  return x*x*x*(x*(x*6.0-15.0)+10.0);
+}
+
+function smoothstepColour(array) {
+  
 }
