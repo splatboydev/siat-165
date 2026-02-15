@@ -1,13 +1,3 @@
-/*
-    Set the vertical position of the note bar. Could remain constant but may be changed for harder levels. 
-
-    Radius and x position of note. X position calculated off time and list of note/timestamp pairs. 
-
-    Radius of target. (x,y) remain constant, minus slight jitter/squash.  
-
-    Track when the target and a note are in the same space, either with timing or by checking what %          intersection there are between the note and     the target. 
-*/
-
 //TODO: keyPress and keyRelease for rhythm logic
 //should make scoring more accurate
 
@@ -24,13 +14,15 @@ let screen;
 let score;
 let lastScore;
 let splash;
+let splashColour;
 
 let targetOffset;
+let targetColour;
 
-// TODO: smoothstep bar colours? // TODO rejected
 let lastBarColour;
 
-let notes = [];
+let notes;
+let objects;
 
 const debug = true;
 
@@ -47,7 +39,7 @@ function setup() {
   
   circleRadius = height / 6 - 10;
   
-  targetOffset = circleRadius + 20;
+  targetOffset = circleRadius + 60;
   
   speed = 0.6; // px/sec.
   time = 0;
@@ -62,6 +54,11 @@ function setup() {
     new Note(2, true),
     new Note(4, true)
   ]
+  
+  objects = [];
+  
+  targetColour = (211, 255, 211);
+  splashColour = (243, 255, 243);
 }
 
 function draw() {
@@ -113,7 +110,7 @@ function drawGame() {
   // GAME LOOP - 3? - Game screen
   // Where the majority of game logic is handled and rendered.
   
-  textSize(20);
+  textSize(18);
   textAlign(CENTER)
   
   // (4) Draw the button and target. These are drawn before notes so notes are placed on top.
@@ -129,14 +126,10 @@ function drawGame() {
   }
   
   // (6) Draw the last score and splash text.
-  noStroke();
-  fill(143, 222, 143);
-  text("Last Score: " + newScore, width / 2, 300);
-  text(splash, width/2, height/3);
-  fill(255);
+  drawHud();
   
   // Debug mode to test note creation and randomisation.
-  if (debug && Number.isInteger(round(time, 3))) {
+  if (debug && Number.isInteger(round(time, 3)) && time <= 18) {
     notes.push(new Note(random(time + 1, time + 2), true));
   }
   
@@ -147,29 +140,43 @@ function drawGame() {
   }
 }
 
-function drawBar() {
-  // Change the bar's colour based on the previous score. I initially wanted to make the transition smoother, but decided this wasn't a big priority.
+function drawHud() {
   switch (newScore) {
+    case 10:
+      splashColour = [66, 60, 50];
+      splash = "Ehh...\n+10";
+      break;
     case 50:
-      fill(195, 235, 204);
-      splash = "Good";
+      splashColour = [64, 130, 109];
+      splash = "Good\n+50";
       break;
     case 100:
-      fill(213, 255, 223);
-      splash = "Great!";
-      break;
-    case 10:
-      fill(204, 242, 213);
-      splash = "Ehh...";
+      splashColour = [18, 10, 143];
+      splash = "Great!\n+100";
       break;
     case 200:
-      fill(230, 100, 0);
-      splash = "Marvelous!"
+      textStyle(BOLD)
+      splashColour = [102, 2, 60];
+      splash = "Marvelous!\n+200"
+      break;
     default:
-      fill(243, 255, 243)
-      splash = "";
+      splashColour = [0, 0, 0];
+      splash = "...\n+0";
       break;
   }
+  
+  noStroke();
+  fill(splashColour);
+  
+  text(splash, targetOffset, height/3);
+  
+  textStyle(NORMAL);
+  text("Score: " + score, targetOffset, 300);
+  fill(255);
+}
+
+function drawBar() {
+  // Change the bar's colour based on the previous score. I initially wanted to make the transition smoother, but decided this wasn't a big priority.
   stroke(155, 237, 155)
   rectMode(CENTER);
   
@@ -179,17 +186,18 @@ function drawBar() {
 function drawTarget() {
   // Apply different colour to the target if a is pressed.
   if (keyIsDown(65)) {
-    fill(187, 232, 187);
+    targetColour = (187, 232, 187);
   } else {
-    fill (211, 255, 211);
+    targetColour = (211, 255, 211);
   }
   
+  fill(targetColour);
   circle(targetOffset, barY, circleRadius);
   fill(255)
 }
 
-function keyReleased() {
-  if (keyCode === 65) {
+function keyPressed() {
+  if (keyCode === 65 && time > 0.6) {
     let note = notes[0];
     
     if (!note || note.pressed) return; // Edge case handling & prevent old notes from updating score.
@@ -199,6 +207,7 @@ function keyReleased() {
     
     // Calculate score based off absolute distance between note and target.
     // However since this is calculated on keyRelease there can often be latency between press and note.
+    // note: switched to keyPressed -> issue no longer there!
     let difference = abs(targetOffset - note.x);
     
     if (difference < 100) {
