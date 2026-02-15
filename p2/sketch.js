@@ -154,7 +154,7 @@ function drawHud() {
       splashColour = [18, 10, 143];
       splash = "Great!\n+100";
       break;
-    case 200:
+    case 150:
       textStyle(BOLD)
       splashColour = [102, 2, 60];
       splash = "Marvelous!\n+200"
@@ -220,7 +220,7 @@ function keyPressed() {
           newScore += 50;
           
           if (difference < 15) {
-            newScore += 100;
+            newScore += 50;
           }
         }
       }
