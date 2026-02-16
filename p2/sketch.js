@@ -207,15 +207,18 @@ function drawBar() {
 }
 
 function drawTarget() {
-  // Apply different colour to the target if a is pressed.
+  let additionalRadius = 1;
+  
+  // Apply different colour and size to the target if a is pressed.
   if (keyIsDown(65)) {
     targetColour = [187, 232, 187];
+    additionalRadius += smoothstep(additionalRadius, 10, 0.5);
   } else {
     targetColour = [211, 255, 211];
   }
   
   fill(targetColour);
-  circle(targetOffset, barY, circleRadius);
+  circle(targetOffset, barY, (circleRadius + additionalRadius));
   fill(255)
 }
 
@@ -295,7 +298,7 @@ class Note {
     this.x = width + circleRadius;
     
     this.pressed = false;
-    this.a = 255; // Alpha 
+    this.colour = [178, 211, 227, 255]; // Alpha
   }
   
   // Both update() and drawSelf() are called at (5).
@@ -310,7 +313,7 @@ class Note {
     }
     
     if (this.pressed) {
-      this.a *= 0.8;
+      //this.colour[3] *= 0.85;
     }
   }
   
@@ -320,17 +323,25 @@ class Note {
       return;
     }
     
+    let a = this.colour[3];
+    let radius = circleRadius;
+    
+    // Type may be expanded upon to add "slider" notes, to press and hold. Rendering them would be 2 circles and a line from midpoint 1 to 2.
     if (this.type) {
       if (this.pressed) {
-        stroke(0, 0, 0, this.a);
-        fill(200, 200, 200, this.a);
+        a = 0;
+        radius = smoothstep(radius, 0, 0.3)
+        stroke(0, 0, 0, a);
+        this.colour = smoothstepColour(this.colour, [200, 200, 200, a], 0.3);
       } else {
-        stroke(204, 236, 252, this.a);
-        fill(178, 211, 227, this.a);
+        stroke(204, 236, 252, a);
       }
     }
     
-    circle(this.x, barY, circleRadius + abcos()*3);
+    fill(this.colour);
+    
+    // shrink along w/ alpha
+    circle(this.x, barY, radius + abcos()*3);
     fill(255);
   }
 }
@@ -342,10 +353,25 @@ function abcos() {
 // Taken from Inigo Quilez' article on smoothstep.
 // https://iquilezles.org/articles/smoothsteps/
 // to be done later
-function smoothsteps(x) {
+function smoothstepPolynomial(x) {
   return x*x*x*(x*(x*6.0-15.0)+10.0);
 }
 
-function smoothstepColour(array) {
+// Functions made w/ help of Wikipedia's smoothstep page.
+// https://en.wikipedia.org/wiki/Smoothstep
+function smoothstep(initial, final, progress) {
+  progress = min(max(abs(progress), 0), 1);
   
+  return (initial + (final - initial) * smoothstepPolynomial(progress));
+}
+
+function smoothstepColour(initial, final, progress) {
+  let t = smoothstepPolynomial(min(max(abs(progress), 0), 1));
+  
+  let r = initial[0] + (final[0] - initial[0]) * t;
+  let g = initial[1] + (final[1] - initial[1]) * t;
+  let b = initial[2] + (final[2] - initial[2]) * t;
+  let a = initial[3] + (final[3] - initial[3]) * t;
+  
+  return [r, g, b, a];
 }
