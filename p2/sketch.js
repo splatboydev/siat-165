@@ -23,7 +23,10 @@ let targetColour;
 let lastBarColour;
 
 let notes;
+let noteCount;
 let objects;
+
+let maxScoreAvg;
 
 const debug = true;
 
@@ -51,15 +54,14 @@ function setup() {
   screen = "start";
   
   notes = [
-    new Note(2, true),
-    new Note(3, true),
-    new Note(5, true)
   ]
+  noteCount = 3;
+  maxScoreAvg = 110;
   
   objects = [];
   
   targetColour = [211, 255, 211];
-  splashColour = (243, 255, 243);
+  splashColour = [243, 255, 243];
 }
 
 function draw() {
@@ -68,14 +70,17 @@ function draw() {
   
   background(224, 255, 224);
   
-  switch (screen) { // display and update game based on the screen variable
+  switch (screen) { // display and update game based on the screen variable; I thought separating update and draw would be unnecessary abstraction but decided I'd split them.
     case "start":
       drawStart();
+      waitForReset();
       break;
     case "end":
       drawEnd();
+      waitForReset();
       break;
     case "game":
+      updateGame();
       drawGame();
       break;
     default:
@@ -87,30 +92,39 @@ function draw() {
 
 function drawStart() {
   // GAME LOOP - 3? - Menu/Start screen
-  // Waits for a "a" keypress and switches screen upon receiving it.
   // Text scales from an arbitrary value 15 to 25 + 15 (cos maximum is 1)
   fill(155, 237, 155)
   textSize(max(25*abcos() + 15, 15));
   text("", width/2 - textWidth("Taiko")/2, height/2);
   text("Press A to start", width/2 - textWidth("----- - -- -----") / 1.5, height/2);
+}
+
+function waitForReset() {
+  // Waits for a "a" keypress and switches screen upon receiving it.
+  // Resets necessary variables.
   
   if (keyIsDown(65)) {
     screen = "game";
     time = 0;
+    noteCount = 0;
   }
 }
 
 function drawEnd() {
   // GAME LOOP - 3? - Game Over screen
   // Render final score.
-  fill(0);
-  
-  text("Game Over! Final Score: " + score, width/2, height/2);
+  fill(155, 237, 155)
+  // Max theoretical score is noteCount * 200 score/marvelous, but unforgiving.
+  // Little white lie.
+  // Here, maxScoreAvg represents the average player score/note.
+  // Taken from my own gameplay and slightly reduced. (100, 102.9, 91.8, 100)/4 is around 98.7.
+  // console.log("Average score: " + round(score / noteCount, 1));
+  text("Game Over! Score: " + score + "\nMax score: " + noteCount * maxScoreAvg +", %: " + round(score/(noteCount * maxScoreAvg / 100), 1) + "%.\nPress A to restart!", width/2, height/2);
 }
 
 function drawGame() {
   // GAME LOOP - 3? - Game screen
-  // Where the majority of game logic is handled and rendered.
+  // Where the majority of the game is rendered.
   
   textSize(18);
   textAlign(CENTER)
@@ -119,23 +133,32 @@ function drawGame() {
   drawBar();
   drawTarget();
   
-  // (5) Iterate (in reverse) over notes in order to update and render them.
-  // Reverse order made removing outdated notes easier.
+  // (5) Iterate over notes and draw them. Since the update and draw are now separate, I wonder if two for loops is inefficient.
   for (let i=notes.length - 1;i>= 0;i--) {
     let note = notes[i];
-    note.update();
     note.drawSelf();
   }
   
   // (6) Draw the last score and splash text.
   drawHud();
-  
-  // Debug mode to test note creation and randomisation.
+}
+
+function updateGame() {
+  // Debug mode to test note creation.
   if (debug && Number.isInteger(round(time, 3)) && time <= 18) {
+    noteCount ++;
     notes.push(new Note(random(time + 1, time + 2), true));
   }
   
-  // Game ends at 20 seconds.
+  // (7) Iterate (in reverse) over notes and update them.
+  // Reverse order made removing outdated notes easier.
+  // One disadvantage is that I noticed the target affecting the wrong notes (this is caused by the debug mode, though - in a real case where notes are all pre-programmed, this would not happen).
+  for (let i=notes.length - 1;i>= 0;i--) {
+    let note = notes[i];
+    note.update();
+  }
+  
+  // (7) End a round at 20 seconds.
   if (time >= 20) {
     screen = "end";
     return;
@@ -199,6 +222,7 @@ function drawTarget() {
 }
 
 function keyPressed() {
+  // Check if key was A. Prevent clicks within a brief period of starting.
   if (keyCode === 65 && time > 0.6) {
     let note = notes[0];
     
