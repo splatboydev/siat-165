@@ -93,7 +93,7 @@ function draw() {
 function drawStart() {
   // GAME LOOP - 3? - Menu/Start screen
   // Text scales from an arbitrary value 15 to 25 + 15 (cos maximum is 1)
-  fill(155, 237, 155)
+  fill(135, 207, 135)
   textSize(max(25*abcos() + 15, 15));
   text("", width/2 - textWidth("Taiko")/2, height/2);
   text("Press A to start", width/2 - textWidth("----- - -- -----") / 1.5, height/2);
@@ -113,11 +113,12 @@ function waitForReset() {
 function drawEnd() {
   // GAME LOOP - 3? - Game Over screen
   // Render final score.
-  fill(155, 237, 155)
+  fill(135, 207, 135);
   // Max theoretical score is noteCount * 200 score/marvelous, but unforgiving.
   // Little white lie.
   // Here, maxScoreAvg represents the average player score/note.
   // Taken from my own gameplay and slightly reduced. (100, 102.9, 91.8, 100)/4 is around 98.7.
+  // If I wanted to be a little more genuine I'd adjust the max score with a curve.
   // console.log("Average score: " + round(score / noteCount, 1));
   text("Game Over! Score: " + score + "\nMax score: " + noteCount * maxScoreAvg +", %: " + round(score/(noteCount * maxScoreAvg / 100), 1) + "%.\nPress A to restart!", width/2, height/2);
 }
@@ -134,10 +135,7 @@ function drawGame() {
   drawTarget();
   
   // (5) Iterate over notes and draw them. Since the update and draw are now separate, I wonder if two for loops is inefficient.
-  for (let i=notes.length - 1;i>= 0;i--) {
-    let note = notes[i];
-    note.drawSelf();
-  }
+  drawNotes();
   
   // (6) Draw the last score and splash text.
   drawHud();
@@ -219,6 +217,13 @@ function drawTarget() {
   fill(targetColour);
   circle(targetOffset, barY, circleRadius);
   fill(255)
+}
+
+function drawNotes() {
+  for (let i=notes.length - 1;i>= 0;i--) {
+    let note = notes[i];
+    note.drawSelf();
+  }
 }
 
 function keyPressed() {
