@@ -19,6 +19,7 @@ let splashColour;
 
 let targetOffset;
 let targetColour;
+let targetAddedRadius;
 
 let lastBarColour;
 
@@ -44,6 +45,7 @@ function setup() {
   circleRadius = height / 6 - 10;
   
   targetOffset = circleRadius + 60;
+  targetAddedRadius = 0;
   
   speed = 1; // px/sec.
   time = 0;
@@ -54,7 +56,8 @@ function setup() {
   screen = "start";
   
   notes = [
-  ]
+  ];
+  
   noteCount = 3;
   maxScoreAvg = 110;
   
@@ -207,18 +210,18 @@ function drawBar() {
 }
 
 function drawTarget() {
-  let additionalRadius = 1;
   
   // Apply different colour and size to the target if a is pressed.
   if (keyIsDown(65)) {
     targetColour = [187, 232, 187];
-    additionalRadius += smoothstep(additionalRadius, 10, 0.5);
+    targetAddedRadius = smoothstep(targetAddedRadius, 8, 0.5);
   } else {
     targetColour = [211, 255, 211];
+    targetAddedRadius = smoothstep(targetAddedRadius, 0, 0.5);
   }
   
   fill(targetColour);
-  circle(targetOffset, barY, (circleRadius + additionalRadius));
+  circle(targetOffset, barY, (circleRadius + targetAddedRadius));
   fill(255)
 }
 
