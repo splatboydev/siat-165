@@ -301,7 +301,8 @@ class Note {
     this.x = width + circleRadius;
     
     this.pressed = false;
-    this.colour = [178, 211, 227, 255]; // Alpha
+    this.colour = [178, 211, 227, 255];
+    this.radius = circleRadius;
   }
   
   // Both update() and drawSelf() are called at (5).
@@ -315,8 +316,11 @@ class Note {
       notes.shift();
     }
     
-    if (this.pressed) {
-      //this.colour[3] *= 0.85;
+    if (this.type) {
+      if (this.pressed) {
+        this.colour = smoothstepColour(this.colour, [200, 200, 200, 0], 0.3);
+        this.radius = smoothstep(this.radius, 0, 0.3);
+      }
     }
   }
   
@@ -326,25 +330,19 @@ class Note {
       return;
     }
     
-    let a = this.colour[3];
-    let radius = circleRadius;
-    
     // Type may be expanded upon to add "slider" notes, to press and hold. Rendering them would be 2 circles and a line from midpoint 1 to 2.
     if (this.type) {
       if (this.pressed) {
-        a = 0;
-        radius = smoothstep(radius, 0, 0.3)
-        stroke(0, 0, 0, a);
-        this.colour = smoothstepColour(this.colour, [200, 200, 200, a], 0.3);
+        stroke(0, 0, 0, this.colour[3]);
       } else {
-        stroke(204, 236, 252, a);
+        stroke(204, 236, 252, this.colour[3]);
       }
     }
     
     fill(this.colour);
     
     // shrink along w/ alpha
-    circle(this.x, barY, radius + abcos()*3);
+    circle(this.x, barY, this.radius + abcos()*3);
     fill(255);
   }
 }
