@@ -1,7 +1,7 @@
+// NOTE: The game runs on p5 1.11.1 but NOT >=2.0.0, even with compatibility libraries installed.
+
 //TODO: keyPress and keyRelease for rhythm logic
 //should make scoring more accurate
-
-// TODO to be done either Wednesday or never.
 
 let barY, barHeight;
 let circleRadius;
