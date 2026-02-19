@@ -124,7 +124,7 @@ function drawEnd() {
   // Taken from my own gameplay and slightly reduced. (100, 102.9, 91.8, 100)/4 is around 98.7.
   // If I wanted to be a little more genuine I'd adjust the max score with a curve.
   // console.log("Average score: " + round(score / noteCount, 1));
-  text("Game Over! Score: " + score + "\nMax score: " + noteCount * maxScoreAvg +", %: " + round(score/(noteCount * maxScoreAvg / 100), 1) + "%.\nPress A to restart!", width/2, height/2);
+  text("Game Over! Score: " + score + "\nMax score: " + round(noteCount * maxScoreAvg, 0) +", %: " + round(score/(noteCount * maxScoreAvg / 100), 1) + "%.\nPress A to restart!", width/2, height/2);
 }
 
 function drawGame() {
