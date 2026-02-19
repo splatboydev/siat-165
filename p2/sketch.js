@@ -238,7 +238,10 @@ function keyPressed() {
   if (keyCode === 65 && time > 0.6) {
     let note = notes[0];
     
-    if (!note || note.pressed) return; // Edge case handling & prevent old notes from updating score.
+    if (!note || note.pressed) {
+      note = notes[1];
+      if (!note || note.pressed) return;
+    }; // Edge case handling & prevent old notes from updating score.
     note.pressed = true;
     
     newScore = 0;
