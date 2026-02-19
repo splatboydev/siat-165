@@ -58,7 +58,7 @@ function setup() {
   notes = [
   ];
   
-  noteCount = 3;
+  noteCount = 0;
   maxScoreAvg = 110;
   
   objects = [];
@@ -110,6 +110,7 @@ function waitForReset() {
     screen = "game";
     time = 0;
     noteCount = 0;
+    score = 0;
   }
 }
 
