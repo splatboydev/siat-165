@@ -1,4 +1,4 @@
-// NOTE: The game runs on p5 1.11.1 but NOT >=2.0.0, even with compatibility libraries installed.
+// NOTE: The game runs on p5 1.11.1 - the default - but NOT >=2.0.0, even with compatibility libraries installed.
 
 //TODO: keyPress and keyRelease for rhythm logic
 //should make scoring more accurate
@@ -6,7 +6,7 @@
 let barY, barHeight;
 let circleRadius;
 
-let time;
+var time;
 let speed;
 
 let screen;
@@ -105,12 +105,31 @@ function drawStart() {
 function waitForReset() {
   // Waits for a "a" keypress and switches screen upon receiving it.
   // Resets necessary variables.
+  // In debug mode, rather than populating the notes array with a real file, generate a bunch of notes instead. Then, sort all notes (?).
   
   if (keyIsDown(65)) {
     screen = "game";
     time = 0;
     noteCount = 0;
     score = 0;
+    
+    notes = [];
+    
+    if (debug) {
+      for (let i = 0; i < random(9, 40); i++) {
+        noteCount ++;
+        notes.push(new Note(random(i + 0.5, i + 2), true));
+      }
+    }
+    
+    //notes.sort(function(a, b,) {
+    // if (a.startTime > b.startTime) {
+    //   return -1;
+    //  } else if (a.startTime < b.startTime) {
+    //  return 1;
+    //}
+    //return 0;
+    //});
   }
 }
 
@@ -146,12 +165,6 @@ function drawGame() {
 }
 
 function updateGame() {
-  // Debug mode to test note creation.
-  if (debug && Number.isInteger(round(time, 3)) && time <= 18) {
-    noteCount ++;
-    notes.push(new Note(random(time + 1, time + 2), true));
-  }
-  
   // (7) Iterate (in reverse) over notes and update them.
   // Reverse order made removing outdated notes easier.
   // One disadvantage is that I noticed the target affecting the wrong notes (this is caused by the debug mode, though - in a real case where notes are all pre-programmed, this would not happen).
@@ -160,7 +173,7 @@ function updateGame() {
     note.update();
   }
   
-  // (7) End a round at 20 seconds.
+  // (8) Check if round exceeds or is at 20 seconds, and end the round.
   if (time >= 20) {
     screen = "end";
     return;
@@ -229,6 +242,8 @@ function drawTarget() {
 function drawNotes() {
   for (let i=notes.length - 1;i>= 0;i--) {
     let note = notes[i];
+    
+    if (!note) return;
     note.drawSelf();
   }
 }
@@ -238,10 +253,16 @@ function keyPressed() {
   if (keyCode === 65 && time > 0.6) {
     let note = notes[0];
     
-    if (!note || note.pressed) {
+    if (note && note.pressed) {
+      return;
+    }
+    
+    if (!note) {
       note = notes[1];
       if (!note || note.pressed) return;
-    }; // Edge case handling & prevent old notes from updating score.
+    } // Edge case handling & prevent old notes from updating score.
+    
+    
     note.pressed = true;
     
     newScore = 0;
@@ -268,6 +289,7 @@ function keyPressed() {
     }
     
     score += newScore;
+    
   }
 }
 
@@ -296,60 +318,6 @@ function keyPressed() {
     circle(noteX(timeTillApproach, i), barY, circleRadius);
   }
 }*/
-
-class Note {
-  // Setup individual note.
-  constructor(spawnTime, type) {
-    this.spawnTime = spawnTime;
-    this.type = type;
-    this.x = width + circleRadius;
-    
-    this.pressed = false;
-    this.colour = [178, 211, 227, 255];
-    this.radius = circleRadius;
-  }
-  
-  // Both update() and drawSelf() are called at (5).
-  
-  // Update this note (calculate position and check if outside of window)
-  update() {
-    let deltaT = this.spawnTime - (time);
-    this.x = (circleRadius - 20) + deltaT * 600;
-    if (this.x < -30) {
-      // https://stackoverflow.com/questions/2003815/how-to-remove-element-from-an-array-in-javascript
-      notes.shift();
-    }
-    
-    if (this.type) {
-      if (this.pressed) {
-        this.colour = smoothstepColour(this.colour, [200, 200, 200, 0], 0.3);
-        this.radius = smoothstep(this.radius, 0, 0.3);
-      }
-    }
-  }
-  
-  // Draw this note. Does not run if outside screen.
-  drawSelf() {
-    if ((this.x > width + 25) || this.x < - 25) {
-      return;
-    }
-    
-    // Type may be expanded upon to add "slider" notes, to press and hold. Rendering them would be 2 circles and a line from midpoint 1 to 2.
-    if (this.type) {
-      if (this.pressed) {
-        stroke(0, 0, 0, this.colour[3]);
-      } else {
-        stroke(204, 236, 252, this.colour[3]);
-      }
-    }
-    
-    fill(this.colour);
-    
-    // shrink along w/ alpha
-    circle(this.x, barY, this.radius + abcos()*3);
-    fill(255);
-  }
-}
 
 function abcos() {
   return abs(cos(time));
