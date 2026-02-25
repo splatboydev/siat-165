@@ -113,12 +113,14 @@ function waitForReset() {
     noteCount = 0;
     score = 0;
     
+    splash = "";
+    
     notes = [];
     
     if (debug) {
-      for (let i = 0; i < random(9, 40); i++) {
+      for (let i = 0; i < random(9, 29); i++) {
         noteCount ++;
-        notes.push(new Note(random(i + 0.5, i + 2), true));
+        notes.push(new Note(random(i + 0.2, i + 2.5), true));
       }
     }
     
@@ -168,9 +170,9 @@ function updateGame() {
   // (7) Iterate (in reverse) over notes and update them.
   // Reverse order made removing outdated notes easier.
   // One disadvantage is that I noticed the target affecting the wrong notes (this is caused by the debug mode, though - in a real case where notes are all pre-programmed, this would not happen).
-  for (let i=notes.length - 1;i>= 0;i--) {
-    let note = notes[i];
-    note.update();
+  // a friend told me javascript has foreach loops.
+  for (const currentNote of notes) {
+    currentNote.update();
   }
   
   // (8) Check if round exceeds or is at 20 seconds, and end the round.
@@ -240,9 +242,7 @@ function drawTarget() {
 }
 
 function drawNotes() {
-  for (let i=notes.length - 1;i>= 0;i--) {
-    let note = notes[i];
-    
+  for (const note of notes) {
     if (!note) return;
     note.drawSelf();
   }
@@ -251,20 +251,22 @@ function drawNotes() {
 function keyPressed() {
   // Check if key was A. Prevent clicks within a brief period of starting.
   if (keyCode === 65 && time > 0.6) {
-    let note = notes[0];
+    let note;
+    let smallestNote = notes[0];
+    let smallestX = width;
     
-    if (note && note.pressed) {
-      return;
+    for (const currentNote of notes) {
+      if (!currentNote || currentNote.pressed) continue;
+      
+      const noteComparison = abs(targetOffset - currentNote.x);
+      if (noteComparison < smallestX) {
+        smallestX = noteComparison;
+        smallestNote = currentNote;
+      }
     }
     
-    if (!note) {
-      note = notes[1];
-      if (!note || note.pressed) return;
-    } // Edge case handling & prevent old notes from updating score.
-    
-    
-    note.pressed = true;
-    
+    if (!smallestNote || smallestNote.pressed) return;
+    note = smallestNote;
     newScore = 0;
     
     // Calculate score based off absolute distance between note and target.
@@ -272,6 +274,7 @@ function keyPressed() {
     // note: switched to keyPressed -> issue no longer there!
     let difference = abs(targetOffset - note.x);
     
+    if (difference > 300) return;
     if (difference < 100) {
       newScore += 10;
       
@@ -290,6 +293,7 @@ function keyPressed() {
     
     score += newScore;
     
+    note.pressed = true;
   }
 }
 
