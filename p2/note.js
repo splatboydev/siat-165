@@ -17,8 +17,7 @@ class Note {
     let deltaT = this.spawnTime - (time);
     this.x = ((circleRadius - 20) + deltaT * 0.9 * width);
     if (this.x < -30 || (this.colour[3] < 10)) {
-      // https://stackoverflow.com/questions/2003815/how-to-remove-element-from-an-array-in-javascript
-      notes.shift();
+      this.removeSelf(notes)
     }
     
     if (this.type) {
@@ -33,9 +32,7 @@ class Note {
   drawSelf() {
     if ((this.x > width + 25) || this.x < - 25) {
       return;
-    }
-    
-    // Type may be expanded upon to add "slider" notes, to press and hold. Rendering them would be 2 circles and a line from midpoint 1 to 2.
+    }// Type may be expanded upon to add "slider" notes, to press and hold. Rendering them would be 2 circles and a line from midpoint 1 to 2.
     if (this.type) {
       if (this.pressed) {
         stroke(0, 0, 0, this.colour[3]);
@@ -48,3 +45,15 @@ class Note {
     
     // shrink along w/ alpha
     circle(this.x, barY, this.radius + abcos()*3);
+    fill(255);
+  }
+  
+  // https://stackoverflow.com/questions/5767325/how-can-i-remove-a-specific-item-from-an-array-in-javascript#5767357
+  removeSelf(array) {
+    var index = array.indexOf(this);
+    if (index > -1) {
+      array.splice(index, 1);
+    }
+    return array;
+    }
+}
